@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Denuncia {
+  id        Int       @id @default(autoincrement())
+  categoria String    @db.VarChar(255)
+  descricao String?
+  latitude  Float
+  longitude Float
+  status    String?   @default("Registrada") @db.VarChar(50)
+  criadoEm  DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@map("denuncias")
+}
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+// model tb_teste {
+// }
