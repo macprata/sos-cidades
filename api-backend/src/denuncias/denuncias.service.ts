@@ -1,20 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { CreateDenunciaDto } from './dto/create-denuncia.dto';
 import { UpdateDenunciaDto } from './dto/update-denuncia.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class DenunciasService {
-  create(createDenunciaDto: CreateDenunciaDto) {
-    return {
-      mensagem: 'Denúncia recebida com sucesso pela prefeitura!',
-      protocolo: Math.floor(Math.random() * 1000000),
-      dados: createDenunciaDto,
-      status: 'Registrada',
-    };
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(data: any) {
+    return await this.prisma.denuncia.create({ data });
   }
 
-  findAll() {
-    return `This action returns all denuncias`;
+  async findAll() {
+    return await this.prisma.denuncia.findMany();
   }
 
   findOne(id: number) {
