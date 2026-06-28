@@ -7,18 +7,62 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// 100% em Português
+enum Perfil {
+  ADMINISTRADOR
+  PREFEITURA
+  CIDADAO
+}
+
+model Usuario {
+  id              Int        @id @default(autoincrement())
+  nome            String
+  email           String     @unique
+  cpf             String?    @unique
+  senha           String
+  perfil          Perfil     @default(CIDADAO)
+  ativo           Boolean    @default(true)
+  
+  // Auditoria profissional mapeada corretamente para o banco
+  dataCriacao     DateTime   @default(now()) @map("data_criacao")
+  dataAtualizacao DateTime   @updatedAt @map("data_atualizacao")
+  
+  denuncias       Denuncia[] 
+
+  @@map("usuarios")
+}
+
+model Categoria {
+  id              Int        @id @default(autoincrement())
+  nome            String     @unique
+  descricao       String?
+  ativo           Boolean    @default(true)
+  
+  dataCriacao     DateTime   @default(now()) @map("data_criacao")
+  dataAtualizacao DateTime   @updatedAt @map("data_atualizacao")
+  
+  denuncias       Denuncia[]
+
+  @@map("categorias")
+}
+
 model Denuncia {
-  id        Int       @id @default(autoincrement())
-  categoria String    @db.VarChar(255)
-  descricao String?
-  latitude  Float
-  longitude Float
-  status    String?   @default("Registrada") @db.VarChar(50)
-  criadoEm  DateTime? @default(now()) @db.Timestamptz(6)
+  id              Int        @id @default(autoincrement())
+  descricao       String
+  latitude        Float
+  longitude       Float
+  status          String     @default("ABERTA") // ABERTA, EM_ANALISE, RESOLVIDA
+  midiaUrl        String?    @map("midia_url")
+  anonima         Boolean    @default(false)
+  
+  dataCriacao     DateTime   @default(now()) @map("data_criacao")
+  dataAtualizacao DateTime   @updatedAt @map("data_atualizacao")
+
+  usuarioId       Int?       @map("usuario_id")
+  usuario         Usuario?   @relation(fields: [usuarioId], references: [id])
+  
+  categoriaId     Int        @map("categoria_id")
+  categoria       Categoria  @relation(fields: [categoriaId], references: [id])
 
   @@map("denuncias")
 }
-
-/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
-// model tb_teste {
-// }
