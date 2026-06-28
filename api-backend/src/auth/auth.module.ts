@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { UsersModule } from '../users/users.module'; // Importe o módulo
+import { UsersModule } from '../users/users.module';
 import { JwtModule } from '@nestjs/jwt';
+import { JwtStrategy } from './jwt.strategy'; // 1. Importe aqui
 
 @Module({
   imports: [
-    UsersModule, // ISSO É CRUCIAL: Conecta o Auth com o Users
+    UsersModule,
     JwtModule.register({
       global: true,
       secret: 'SOS_CIDADES_SECRET_KEY_2026',
@@ -14,6 +15,6 @@ import { JwtModule } from '@nestjs/jwt';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, JwtStrategy], // 2. Adicione o JwtStrategy aqui
 })
 export class AuthModule {}
