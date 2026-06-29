@@ -22,15 +22,20 @@ export class DenunciasService {
         midiaUrl: fileUrl,
         categoriaId: Number(data.categoriaId),
         usuarioId: Number(data.userId),
-        // Adicione estas linhas abaixo:
         latitude: parseFloat(data.latitude),
         longitude: parseFloat(data.longitude),
       },
     });
   }
 
-  async findAll() {
-    return await this.prisma.denuncia.findMany();
+  async findAll(page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.denuncia.findMany({ skip, take: Number(limit) }),
+      this.prisma.denuncia.count(),
+    ]);
+
+    return { data, total, page, limit };
   }
 
   findOne(id: number) {

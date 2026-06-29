@@ -1,6 +1,8 @@
 import {
   Controller,
   Post,
+  Get,
+  Query,
   UseInterceptors,
   UploadedFile,
   Body,
@@ -36,5 +38,13 @@ export class DenunciasController {
   })
   async create(@Body() body: any, @UploadedFile() file: Express.Multer.File) {
     return this.denunciasService.create(body, file);
+  }
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  async findAll(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.denunciasService.findAll(Number(page), Number(limit));
   }
 }

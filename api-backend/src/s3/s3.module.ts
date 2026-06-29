@@ -3,6 +3,6 @@ import { S3Service } from './s3.service';
 
 @Module({
   providers: [S3Service],
-  exports: [S3Service], // <--- IMPORTANTE: Isso libera o serviço para outros módulos!
+  exports: [S3Service],
 })
 export class S3Module {}
