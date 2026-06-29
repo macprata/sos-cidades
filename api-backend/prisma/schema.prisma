@@ -7,7 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 100% em Português
 enum Perfil {
   ADMINISTRADOR
   PREFEITURA
@@ -23,7 +22,6 @@ model Usuario {
   perfil          Perfil     @default(CIDADAO)
   ativo           Boolean    @default(true)
   
-  // Auditoria profissional mapeada corretamente para o banco
   dataCriacao     DateTime   @default(now()) @map("data_criacao")
   dataAtualizacao DateTime   @updatedAt @map("data_atualizacao")
   

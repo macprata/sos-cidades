@@ -21,7 +21,6 @@ export class AuthService {
       throw new UnauthorizedException('E-mail ou senha incorretos');
     }
 
-    // O payload agora usa 'perfil' em português, refletindo o banco
     const payload = { sub: user.id, email: user.email, perfil: user.perfil };
 
     return {

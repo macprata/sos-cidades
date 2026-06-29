@@ -12,8 +12,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  // Se o token for válido, o NestJS chama essa função.
-  // O retorno dela vira a variável "req.user" nas rotas protegidas!
   async validate(payload: any) {
     return { id: payload.sub, email: payload.email, perfil: payload.perfil };
   }

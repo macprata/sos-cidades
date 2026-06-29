@@ -2,13 +2,13 @@ import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
 
-@ApiTags('autenticacao') // <-- É isso que cria a aba azul!
+@ApiTags('autenticacao')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @HttpCode(HttpStatus.OK)
-  @Post('login') // <-- É isso que cria o botão de rota!
+  @Post('login')
   @ApiOperation({ summary: 'Realizar login e obter token JWT de acesso' })
   @ApiBody({
     schema: {
