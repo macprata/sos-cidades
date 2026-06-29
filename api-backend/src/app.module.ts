@@ -5,9 +5,10 @@ import { DenunciasModule } from './denuncias/denuncias.module'; // Seu módulo o
 import { UsersModule } from './users/users.module'; // O galho de usuários
 import { AuthModule } from './auth/auth.module'; // O galho de autenticação (que estava faltando!)
 import { PrismaModule } from './prisma/prisma.module';
+import { CategoriasModule } from './categorias/categorias.module';
 
 @Module({
-  imports: [PrismaModule, DenunciasModule, UsersModule, AuthModule],
+  imports: [PrismaModule, DenunciasModule, UsersModule, AuthModule, CategoriasModule],
   controllers: [AppController],
   providers: [AppService],
 })
