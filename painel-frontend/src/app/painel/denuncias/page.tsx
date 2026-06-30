@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
-  ArrowLeft,
   Search,
   Filter,
   MapPin,
@@ -14,14 +13,21 @@ import {
   Clock,
   AlertCircle,
   FileText,
+  Menu,
+  Plus,
+  X,
+  Home,
+  User,
+  LogOut,
 } from "lucide-react";
-import api from "../../../services/api"; // Ajuste o caminho se necessário
+import api from "../../../services/api";
 import { toast } from "sonner";
 
 export default function ListaDenuncias() {
   const router = useRouter();
   const [denuncias, setDenuncias] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Estados para os filtros
   const [busca, setBusca] = useState("");
@@ -36,7 +42,6 @@ export default function ListaDenuncias() {
           return;
         }
 
-        // Chamando a API (vamos ajustar o backend para não limitar a 4 aqui)
         const response = await api.get("/denuncias/minhas", {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -53,7 +58,6 @@ export default function ListaDenuncias() {
     fetchTodasDenuncias();
   }, [router]);
 
-  // Função para renderizar as tags de status no mesmo padrão visual
   const renderStatus = (status: string) => {
     switch (status?.toUpperCase()) {
       case "RESOLVIDO":
@@ -77,7 +81,6 @@ export default function ListaDenuncias() {
     }
   };
 
-  // Lógica de Filtro e Pesquisa
   const denunciasFiltradas = denuncias.filter((denuncia) => {
     const termoBusca = busca.toLowerCase();
     const tituloCategoria = denuncia.categoria?.nome?.toLowerCase() || "";
@@ -92,24 +95,71 @@ export default function ListaDenuncias() {
     return passaBusca && passaFiltro;
   });
 
+  const menuItems = [
+    { name: "Início", icon: Home, action: () => router.push("/painel") },
+    {
+      name: "Nova Denúncia",
+      icon: Plus,
+      action: () => router.push("/painel/denuncias/nova"),
+    },
+    { name: "Meu Perfil", icon: User, action: () => console.log("Perfil...") },
+  ];
+
   return (
     <main className="min-h-screen bg-slate-50 pb-20">
-      {/* HEADER */}
-      <header className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-20">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.push("/painel")}
-            className="text-slate-500 hover:text-slate-900 transition"
-          >
-            <ArrowLeft size={24} />
-          </button>
-          <span className="font-bold text-slate-800">Histórico Completo</span>
-        </div>
-        <Image src="/sos_cidades_logo.png" alt="Logo" width={80} height={25} />
+      {/* HEADER ATUALIZADO */}
+      <header className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-20 shadow-sm">
+        <Image src="/sos_cidades_logo.png" alt="Logo" width={100} height={30} />
+        <button
+          onClick={() => setIsMenuOpen(true)}
+          className="p-2 text-slate-500 hover:text-slate-900 transition bg-slate-50 rounded-xl border border-slate-100"
+        >
+          <Menu size={24} />
+        </button>
       </header>
 
+      {/* MENU DRAWER (Overlay) */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsMenuOpen(false)}
+          />
+          <div className="w-64 bg-white h-full shadow-2xl p-6 relative flex flex-col animate-in slide-in-from-left">
+            <button
+              className="mb-8 text-slate-400 hover:text-slate-800"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <X size={28} />
+            </button>
+
+            <div className="flex-1 space-y-4">
+              {menuItems.map((item) => (
+                <button
+                  key={item.name}
+                  onClick={item.action}
+                  className="flex items-center gap-4 w-full p-3 font-bold text-slate-700 hover:bg-slate-50 rounded-xl transition"
+                >
+                  <item.icon size={20} className="text-cyan-600" /> {item.name}
+                </button>
+              ))}
+              <hr className="my-4 border-slate-100" />
+              <button
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  router.push("/login");
+                }}
+                className="flex items-center gap-4 w-full p-3 font-bold text-red-600 hover:bg-red-50 rounded-xl transition"
+              >
+                <LogOut size={20} /> Sair
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="p-6 max-w-4xl mx-auto space-y-6">
-        {/* Título e Contagem */}
+        {/* TÍTULO, CONTAGEM E BOTÃO NOVA DENÚNCIA */}
         <div className="flex justify-between items-end">
           <div>
             <h1 className="text-2xl font-black text-slate-900">
@@ -119,9 +169,17 @@ export default function ListaDenuncias() {
               Acompanhe todos os seus protocolos
             </p>
           </div>
-          <span className="bg-slate-200 text-slate-700 px-3 py-1 rounded-full text-xs font-bold">
-            {denunciasFiltradas.length} Registros
-          </span>
+          <div className="flex flex-col items-end gap-3">
+            <button
+              onClick={() => router.push("/painel/denuncias/nova")}
+              className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-slate-800 transition-colors shadow-md text-sm"
+            >
+              <Plus size={18} /> Nova
+            </button>
+            <span className="bg-slate-200 text-slate-700 px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold">
+              {denunciasFiltradas.length} Registros
+            </span>
+          </div>
         </div>
 
         {/* BARRA DE PESQUISA E FILTRO */}
@@ -178,11 +236,12 @@ export default function ListaDenuncias() {
               denunciasFiltradas.map((denuncia) => (
                 <div
                   key={denuncia.id}
-                  onClick={() => router.push(`/painel/denuncia/${denuncia.id}`)}
+                  onClick={() =>
+                    router.push(`/painel/denuncias/${denuncia.id}`)
+                  }
                   className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md hover:border-cyan-200 cursor-pointer transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group"
                 >
                   <div className="flex items-start gap-4 flex-1">
-                    {/* Imagem Thumbnail (se houver) ou Ícone Padrão */}
                     {denuncia.imagemUrl ? (
                       <div className="w-16 h-16 rounded-xl flex-shrink-0 overflow-hidden bg-slate-100">
                         <img
@@ -213,7 +272,7 @@ export default function ListaDenuncias() {
                       <div className="flex items-center gap-4 text-xs font-medium text-slate-400">
                         <span className="flex items-center gap-1">
                           <Calendar size={14} />{" "}
-                          {new Date(denuncia.createdAt).toLocaleDateString(
+                          {new Date(denuncia.dataCriacao).toLocaleDateString(
                             "pt-BR",
                           )}
                         </span>

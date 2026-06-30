@@ -27,6 +27,8 @@ model Usuario {
   
   denuncias       Denuncia[] 
 
+  movimentacoes  Movimentacao[]
+
   @@map("usuarios")
 }
 
@@ -73,5 +75,29 @@ model Denuncia {
   categoriaId     Int        @map("categoria_id")
   categoria       Categoria  @relation(fields: [categoriaId], references: [id])
 
+  movimentacoes  Movimentacao[]
+
   @@map("denuncias")
+}
+
+model Movimentacao {
+  id              Int      @id @default(autoincrement())
+  mensagem        String   @db.Text // @db.Text permite textos mais longos que o String padrão
+  
+  // Campos opcionais super úteis para criar uma timeline rica:
+  // Ex: "A prefeitura mudou de EM_ANALISE para EM_ANDAMENTO"
+  statusAnterior  String?  
+  statusNovo      String?  
+  
+  dataCriacao     DateTime   @default(now()) @map("data_criacao")
+
+  // Relacionamento 1 (A qual denúncia esta mensagem pertence?)
+  denunciaId      Int
+  denuncia        Denuncia @relation(fields: [denunciaId], references: [id], onDelete: Cascade)
+
+  // Relacionamento 2 (Quem escreveu? Pode ser o atendente da prefeitura ou o próprio cidadão respondendo)
+  usuarioId         Int
+  usuario           Usuario     @relation(fields: [usuarioId], references: [id])
+
+  @@map("movimentacoes")
 }

@@ -58,11 +58,11 @@ export default function Denuncias() {
   }, [router]);
 
   const menuItems = [
-    { name: "Início", icon: Home, action: () => setIsMenuOpen(false) },
+    { name: "Home", icon: Home, action: () => setIsMenuOpen(false) },
     {
-      name: "Nova Denúncia",
+      name: "Denúncias",
       icon: Plus,
-      action: () => router.push("/painel/denuncia"),
+      action: () => router.push("/painel/denuncias"),
     },
     { name: "Meu Perfil", icon: User, action: () => console.log("Perfil...") },
   ];
@@ -202,7 +202,7 @@ export default function Denuncias() {
       {/* BOTTOM NAV */}
       <nav className="fixed bottom-0 w-full bg-white border-t border-slate-200 p-4 flex justify-around items-center z-10">
         <button className="flex flex-col items-center text-slate-400">
-          <Home size={24} /> <span className="text-[10px]">Início</span>
+          <Home size={24} /> <span className="text-[10px]">Home</span>
         </button>
 
         <button

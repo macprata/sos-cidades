@@ -12,48 +12,83 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
+  MessageCircle, // <-- Novo ícone
+  Send, // <-- Novo ícone
 } from "lucide-react";
-import api from "../../../../services/api"; // Ajuste o caminho do import da sua API conforme necessário
+import api from "../../../../services/api"; // Ajuste o caminho conforme necessário
 import { toast } from "sonner";
 
 export default function DetalhesDenuncia() {
   const router = useRouter();
-  const params = useParams(); // Pega o ID da URL
+  const params = useParams();
   const { id } = params;
 
   const [denuncia, setDenuncia] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDetalhes = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          router.push("/login");
-          return;
-        }
+  // === NOVOS ESTADOS PARA A MENSAGEM ===
+  const [novaMensagem, setNovaMensagem] = useState("");
+  const [enviando, setEnviando] = useState(false);
 
-        // Busca os dados da denúncia específica pelo ID
-        const response = await api.get(`/denuncias/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setDenuncia(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar detalhes:", error);
-        toast.error("Não foi possível carregar os detalhes da denúncia.");
-        router.push("/painel"); // Volta pro painel se der erro
-      } finally {
-        setLoading(false);
+  // Extraímos o fetch para poder chamá-lo novamente após enviar uma mensagem
+  const fetchDetalhes = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/login");
+        return;
       }
-    };
 
+      const response = await api.get(`/denuncias/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setDenuncia(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar detalhes:", error);
+      toast.error("Não foi possível carregar os detalhes da denúncia.");
+      router.push("/painel");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     if (id) {
       fetchDetalhes();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, router]);
 
-  // Função para renderizar um badge de status bonitinho
+  // === FUNÇÃO PARA ENVIAR A NOVA MOVIMENTAÇÃO ===
+  const handleEnviarMensagem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!novaMensagem.trim()) return;
+
+    setEnviando(true);
+    try {
+      const token = localStorage.getItem("token");
+      await api.post(
+        `/denuncias/${id}/movimentacoes`,
+        {
+          mensagem: novaMensagem,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      toast.success("Mensagem enviada com sucesso!");
+      setNovaMensagem(""); // Limpa o campo
+      fetchDetalhes(); // Recarrega os dados para mostrar a nova mensagem na tela
+    } catch (error) {
+      console.error("Erro ao enviar movimentação:", error);
+      toast.error("Erro ao enviar mensagem.");
+    } finally {
+      setEnviando(false);
+    }
+  };
+
   const renderStatus = (status: string) => {
     switch (status?.toUpperCase()) {
       case "RESOLVIDO":
@@ -88,9 +123,10 @@ export default function DetalhesDenuncia() {
   if (!denuncia) return null;
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-20">
+    // Aumentamos o pb-32 para a barra de mensagem não cobrir o conteúdo do final
+    <main className="min-h-screen bg-slate-50 pb-32">
       {/* Header Fixo */}
-      <header className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+      <header className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.back()}
@@ -140,7 +176,6 @@ export default function DetalhesDenuncia() {
 
         {/* Bento Grid para as Informações */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Card de Descrição */}
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm md:col-span-2">
             <h3 className="flex items-center gap-2 font-bold text-slate-800 mb-3">
               <AlignLeft className="text-cyan-600" size={20} /> Relato do
@@ -151,7 +186,6 @@ export default function DetalhesDenuncia() {
             </p>
           </div>
 
-          {/* Card de Localização */}
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm md:col-span-2">
             <div className="flex justify-between items-start mb-4">
               <h3 className="flex items-center gap-2 font-bold text-slate-800">
@@ -189,17 +223,74 @@ export default function DetalhesDenuncia() {
                 <strong className="text-slate-800">Cidade/UF:</strong>{" "}
                 {denuncia.cidade} / {denuncia.estado}
               </p>
-              {denuncia.pontoReferencia && (
-                <p className="mt-2 text-amber-700 bg-amber-50 p-2 rounded-lg inline-block border border-amber-100">
-                  <strong className="block text-xs uppercase mb-1">
-                    Ponto de Referência:
-                  </strong>
-                  {denuncia.pontoReferencia}
-                </p>
-              )}
             </div>
           </div>
         </div>
+
+        {/* === NOVA SEÇÃO: TIMELINE DE MOVIMENTAÇÕES === */}
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <h3 className="flex items-center gap-2 font-bold text-slate-800 mb-6">
+            <MessageCircle className="text-cyan-600" size={20} /> Histórico de
+            Atualizações
+          </h3>
+
+          <div className="space-y-6">
+            {!denuncia.movimentacoes || denuncia.movimentacoes.length === 0 ? (
+              <p className="text-center text-slate-400 text-sm py-4">
+                Nenhuma movimentação registrada ainda.
+              </p>
+            ) : (
+              denuncia.movimentacoes.map((mov: any) => (
+                <div
+                  key={mov.id}
+                  className="relative pl-6 border-l-2 border-slate-100"
+                >
+                  <div className="absolute w-3 h-3 bg-cyan-500 rounded-full -left-[7px] top-1.5 ring-4 ring-white"></div>
+                  <div className="bg-slate-50 p-4 rounded-2xl rounded-tl-none border border-slate-100">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-bold text-sm text-slate-800">
+                        {mov.usuario?.nome}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-medium">
+                        {new Date(mov.dataCriacao).toLocaleString("pt-BR")}
+                      </span>
+                    </div>
+                    <p className="text-slate-600 text-sm whitespace-pre-wrap">
+                      {mov.mensagem}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* === NOVA SEÇÃO: FORMULÁRIO FIXO NO RODAPÉ === */}
+      <div className="fixed bottom-0 w-full bg-white border-t border-slate-200 p-4 z-20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
+        <form
+          onSubmit={handleEnviarMensagem}
+          className="max-w-3xl mx-auto flex gap-3"
+        >
+          <input
+            type="text"
+            value={novaMensagem}
+            onChange={(e) => setNovaMensagem(e.target.value)}
+            placeholder="Adicionar nova informação ou resposta..."
+            className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-6 py-3 outline-none focus:ring-2 focus:ring-cyan-600 text-slate-700"
+            disabled={enviando}
+          />
+          <button
+            type="submit"
+            disabled={!novaMensagem.trim() || enviando}
+            className="bg-slate-900 text-white p-3 md:px-6 rounded-full font-bold flex items-center justify-center gap-2 hover:bg-slate-800 disabled:opacity-50 transition-colors shadow-md"
+          >
+            <span className="hidden md:block">
+              {enviando ? "Enviando..." : "Enviar"}
+            </span>
+            <Send size={18} />
+          </button>
+        </form>
       </div>
     </main>
   );

@@ -90,4 +90,15 @@ export class DenunciasController {
 
     return denuncia;
   }
+
+  @Post(':id/movimentacoes')
+  @UseGuards(JwtAuthGuard)
+  async criarMovimentacao(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: any,
+    @Body('mensagem') mensagem: string,
+  ) {
+    const usuarioId = req.user.id;
+    return this.denunciasService.adicionarMovimentacao(id, usuarioId, mensagem);
+  }
 }

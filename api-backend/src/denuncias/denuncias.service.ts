@@ -69,15 +69,53 @@ export class DenunciasService {
     return { data, total, page, limit };
   }
 
-  // No denuncias.service.ts
   async findOne(id: number, usuarioId: number) {
     return this.prisma.denuncia.findFirst({
       where: {
         id,
-        usuarioId, // Garante que o usuário só veja as denúncias dele
+        usuarioId,
       },
       include: {
-        categoria: true, // Traz os dados da categoria junto
+        categoria: true,
+        movimentacoes: {
+          // Usa 'usuario' em vez de 'autor'
+          include: { usuario: { select: { nome: true } } },
+          // Alinhe com o nome da sua coluna de data no schema.prisma (pode ser dataCriacao ou data_criacao)
+          orderBy: { dataCriacao: 'desc' },
+        },
+      },
+    });
+  }
+
+  async adicionarMovimentacao(
+    denunciaId: number,
+    usuarioId: number,
+    mensagem: string,
+  ) {
+    // 1. Verifica se a denúncia existe e se pertence ao usuário para garantir a segurança
+    const denuncia = await this.prisma.denuncia.findFirst({
+      where: { id: denunciaId, usuarioId: usuarioId },
+    });
+
+    if (!denuncia) {
+      // Importe NotFoundException do '@nestjs/common' no topo do arquivo se ainda não tiver
+      throw new (await import('@nestjs/common')).NotFoundException(
+        'Denúncia não encontrada.',
+      );
+    }
+
+    // 2. Grava a movimentação na sua tabela
+    return this.prisma.movimentacao.create({
+      data: {
+        mensagem,
+        denunciaId,
+        usuarioId, // Mapeado exatamente para a coluna da sua tabela
+      },
+      include: {
+        usuario: {
+          // Traz o nome de quem fez a movimentação para exibir no frontend
+          select: { nome: true },
+        },
       },
     });
   }
