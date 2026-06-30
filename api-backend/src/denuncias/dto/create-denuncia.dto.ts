@@ -1,6 +1,15 @@
+// Exemplo de campos necessários no seu DTO
 export class CreateDenunciaDto {
-  categoria!: string;
-  descricao?: string;
+  categoriaId!: string;
+  descricao!: string;
+  cep!: string;
+  logradouro!: string;
+  numero!: string;
+  complemento!: string;
+  bairro!: string;
+  cidade!: string;
+  estado!: string;
+  pontoReferencia!: string;
   latitude!: number;
   longitude!: number;
 }

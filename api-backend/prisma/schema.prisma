@@ -49,6 +49,17 @@ model Denuncia {
   descricao       String
   latitude        Float
   longitude       Float
+  
+  // Novos campos de endereço
+  cep             String?
+  logradouro      String?
+  numero          String?
+  complemento     String?
+  bairro          String?
+  cidade          String?
+  estado          String?
+  pontoReferencia String? @map("ponto_referencia")
+
   status          String     @default("ABERTA") // ABERTA, EM_ANALISE, RESOLVIDA
   midiaUrl        String?    @map("midia_url")
   anonima         Boolean    @default(false)
