@@ -171,7 +171,7 @@ export default function Denuncias() {
             minhasDenuncias.map((denuncia) => (
               <div
                 key={denuncia.id}
-                onClick={() => router.push(`/painel/denuncia/${denuncia.id}`)}
+                onClick={() => router.push(`/painel/denuncias/${denuncia.id}`)}
                 className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between cursor-pointer hover:border-cyan-200 transition-colors"
               >
                 <div className="flex items-center gap-4">
@@ -207,7 +207,7 @@ export default function Denuncias() {
 
         <button
           className="bg-slate-900 text-white p-4 rounded-full shadow-xl -mt-10 border-4 border-slate-50 transition-transform hover:scale-105"
-          onClick={() => router.push("/painel/denuncia")}
+          onClick={() => router.push("/painel/denuncias/nova")}
         >
           <Plus size={32} />
         </button>
