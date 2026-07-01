@@ -70,7 +70,7 @@ export class DenunciasService {
   }
 
   async findOne(id: number, usuarioId: number) {
-    return this.prisma.denuncia.findFirst({
+    const denuncia = await this.prisma.denuncia.findFirst({
       where: {
         id,
         usuarioId,
@@ -78,13 +78,20 @@ export class DenunciasService {
       include: {
         categoria: true,
         movimentacoes: {
-          // Usa 'usuario' em vez de 'autor'
           include: { usuario: { select: { nome: true } } },
-          // Alinhe com o nome da sua coluna de data no schema.prisma (pode ser dataCriacao ou data_criacao)
           orderBy: { dataCriacao: 'desc' },
         },
       },
     });
+
+    if (!denuncia) return null;
+
+    // Assina a URL se existir
+    const midiaUrlSegura = denuncia.midiaUrl
+      ? await this.s3Service.gerarUrlTemporaria(denuncia.midiaUrl)
+      : null;
+
+    return { ...denuncia, midiaUrl: midiaUrlSegura };
   }
 
   async adicionarMovimentacao(
@@ -129,10 +136,27 @@ export class DenunciasService {
     return `This action removes a #${id} denuncia`;
   }
   async findMinhasDenuncias(usuarioId: number) {
-    return this.prisma.denuncia.findMany({
+    // 1. Busca as denúncias com o relacionamento da categoria
+    const denuncias = await this.prisma.denuncia.findMany({
       where: { usuarioId },
-      orderBy: { dataCriacao: 'desc' }, // Traz as mais recentes primeiro
-      take: 4, // Limita diretamente no banco de dados
+      include: {
+        categoria: true,
+      },
+      orderBy: { dataCriacao: 'desc' },
     });
+
+    // 2. Transforma as URLs para versões temporárias assinadas (segurança privada)
+    const denunciasComUrlsSeguras = await Promise.all(
+      denuncias.map(async (denuncia) => {
+        return {
+          ...denuncia,
+          midiaUrl: denuncia.midiaUrl
+            ? await this.s3Service.gerarUrlTemporaria(denuncia.midiaUrl)
+            : null,
+        };
+      }),
+    );
+
+    return denunciasComUrlsSeguras;
   }
 }

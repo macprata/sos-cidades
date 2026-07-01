@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Get, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  UseGuards,
+  Param,
+  Patch,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -21,5 +29,12 @@ export class UsersController {
   @ApiOperation({ summary: 'Listar todos os usuários (Requer Token)' })
   findAll() {
     return this.usersService.findAll();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  @ApiOperation({ summary: 'Atualizar usuário pelo administrador' })
+  updateAdmin(@Param('id') id: string, @Body() data: any) {
+    return this.usersService.update(Number(id), data);
   }
 }

@@ -9,8 +9,8 @@ datasource db {
 
 enum Perfil {
   ADMINISTRADOR
-  PREFEITURA
-  CIDADAO
+  GESTOR
+  CLIENTE
 }
 
 model Usuario {
